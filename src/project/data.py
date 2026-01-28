@@ -25,8 +25,37 @@ def generate_training_data(
     # Oppgave 3.3: Start
     #######################################################################
 
-    # Placeholder initialization — replace this with your implementation
-    x, y, t, T_fdm, sensor_data = None, None, None, None, None
+    import matplotlib.pyplot as plt
+
+    x, y, t, T_fdm = solve_heat_equation(cfg=cfg)
+    sensor_data = _generate_sensor_data(x=x, y=y, t=t, T=T_fdm, cfg=cfg)
+    DECIMALS = 2
+
+    sensor_x_data = np.array(sensor_data[:, 0])
+    sensor_y_data = np.array(sensor_data[:, 1])
+    t_data = np.array(sensor_data[:, 2])
+    T_data = np.array(sensor_data[:, 3])
+
+    sensor_x_datas = []
+    sensor_y_datas = []
+    t_datas = []
+    T_datas = []
+    prev_idx = 0
+    for i in range(len(t_data)):
+        if int(t_data[i])==24:
+            sensor_x_datas.append(sensor_x_data[i])
+            sensor_y_datas.append(sensor_y_data[i])
+            t_datas.append(t_data[prev_idx:i+1])
+            T_datas.append(T_data[prev_idx:i+1])
+            prev_idx = i+1
+
+    fig, ax = plt.subplots()
+    
+    for i in range(len(t_datas)):
+        ax.plot(t_datas[i], T_datas[i], label=f'Sensor {i+1}:\nPos: {np.round(sensor_x_datas[i], DECIMALS)}, {np.round(sensor_y_datas[i], DECIMALS)}')
+    
+    ax.legend()
+    plt.show()
 
     #######################################################################
     # Oppgave 3.3: Slutt
