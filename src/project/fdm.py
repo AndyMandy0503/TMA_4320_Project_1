@@ -20,8 +20,8 @@ def solve_heat_equation(
         T: temperature solution (nt, nx, ny)
     """
     # Create grids
-    x = np.linspace(cfg.x_min, cfg.x_max, cfg.nx)
-    y = np.linspace(cfg.y_min, cfg.y_max, cfg.ny)
+    x = np.linspace(cfg.x_min, cfg.x_max, cfg.nx) 
+    y = np.linspace(cfg.y_min, cfg.y_max, cfg.ny) 
     t = np.linspace(cfg.t_min, cfg.t_max, cfg.nt)
 
     dx, dy = x[1] - x[0], y[1] - y[0]
@@ -35,6 +35,23 @@ def solve_heat_equation(
 
     # Placeholder initialization — replace this with your implementation
     T = np.zeros((cfg.nt, cfg.nx, cfg.ny))
+
+    #Intialiserer ved tid t=0
+    for i in range(cfg.nx):
+        for j in range(cfg.ny):
+            T[0,i,j] = cfg.T_outside
+    
+    A = _build_matrix(cfg=cfg, dx=dx, dy=dy, dt=dt)
+    
+    # k dealer med tiden, den doble for-lokka konverterer vektor indeks til matrise posisjon
+    for k in range(1, len(t)):
+        b = _build_rhs(cfg=cfg, T_curr=T[k-1, :, :], X=X, Y=Y, dx=dx, dy=dy, dt=dt, t_next=t[k])
+        T_temp = np.linalg.solve(A, b)
+        
+        for i in range(0, cfg.nx):
+            for j in range(0, cfg.ny):
+
+                T[k,i,j] = T_temp[i*cfg.ny + j]
 
     #######################################################################
     # Oppgave 3.2: Slutt
