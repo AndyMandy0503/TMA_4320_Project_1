@@ -50,6 +50,8 @@ def generate_training_data(
             prev_idx = i+1
 
     fig, ax = plt.subplots()
+    ax.set_xlabel('t / h')
+    ax.set_ylabel(r'$^o C$')
     
     for i in range(len(t_datas)):
         ax.plot(t_datas[i], T_datas[i], label=f'Sensor {i+1}:\nPos: {np.round(sensor_x_datas[i], DECIMALS)}, {np.round(sensor_y_datas[i], DECIMALS)}')
