@@ -31,26 +31,9 @@ def data_loss(
     # Oppgave 4.2: Start
     #######################################################################
 
-    # Placeholder initialization — replace this with your implementation
-    
-    data_loss_val = None
-    '''
-    N_s = len(sensor_data)
-    N_m = len(t)
-    
-    for i in range(N_s):
-        for j in range(N_m):
-            T_f = forward(nn_params=nn_params, x=x[i], y=y[i], t=t[j], cfg=cfg)
-            T_obs = T_true[i*N_m + j]
-            data_loss_val += (T_f - T_obs)**2 /(N_m*N_s)
-
-    data_loss_val = jnp.array(data_loss_val)
-    '''
-
-    T_pred = forward(nn_params, x, y, t, cfg)
-    loss = jnp.mean((T_pred - T_true)**2)
+    T_f = forward(nn_params, x, y, t, cfg)
+    loss = jnp.mean((T_f - T_true)**2)
     data_loss_val = jnp.array(loss)
-    
 
     #######################################################################
     # Oppgave 4.2: Slutt (se også ic_loss)
@@ -80,9 +63,10 @@ def ic_loss(
     # Oppgave 4.2: Start
     #######################################################################
 
-    # Placeholder initialization — replace this with your implementation
-    ic_loss_val = None
-
+    T_f = forward(nn_params, x, y, cfg.T_outside, cfg)
+    loss = jnp.mean((T_f - cfg.T_outside)**2)
+    ic_loss_val = jnp.array(loss)
+    
     #######################################################################
     # Oppgave 4.2: Slutt (se også data_loss)
     #######################################################################
