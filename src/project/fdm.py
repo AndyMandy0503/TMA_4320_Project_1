@@ -20,8 +20,8 @@ def solve_heat_equation(
         T: temperature solution (nt, nx, ny)
     """
     # Create grids
-    x = np.linspace(cfg.x_min, cfg.x_max, cfg.nx) 
-    y = np.linspace(cfg.y_min, cfg.y_max, cfg.ny) 
+    x = np.linspace(cfg.x_min, cfg.x_max, cfg.nx)
+    y = np.linspace(cfg.y_min, cfg.y_max, cfg.ny)
     t = np.linspace(cfg.t_min, cfg.t_max, cfg.nt)
 
     dx, dy = x[1] - x[0], y[1] - y[0]
