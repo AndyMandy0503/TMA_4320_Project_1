@@ -37,11 +37,34 @@ def train_nn(
 
     # Update the nn_params and losses dictionary
 
+    ic_array = sensor_data[:, :3].at[:, 2].set(cfg.T_outside)
+
+    def objective_fn(nn_params):
+        return cfg.lambda_data * ic_loss(nn_params=nn_params, ic_points=ic_array, cfg=cfg) + cfg.lambda_ic * data_loss(nn_params=nn_params, sensor_data=sensor_data, cfg=cfg)
+    
+    '''
+    for i in range(cfg.num_epochs):
+    '''
+    from tqdm import tqdm
+    for i in tqdm(range(cfg.num_epochs), desc="Training NN"):
+        obj_val, obj_grad = jax.value_and_grad(objective_fn)(nn_params)
+        loss_tuple = (ic_loss(nn_params=nn_params, ic_points=ic_array, cfg=cfg), data_loss(nn_params=nn_params, sensor_data=sensor_data, cfg=cfg))
+        #print(i, loss_tuple[0], loss_tuple[1], obj_val)
+        losses["ic"].append(loss_tuple[0])
+        losses["data"].append(loss_tuple[1])
+        losses["total"].append(obj_val)
+
+        nn_params, adam_state = adam_step(nn_params, obj_grad, adam_state, lr=cfg.learning_rate)
+
+
     #######################################################################
     # Oppgave 4.3: Slutt
     #######################################################################
 
     return nn_params, {k: jnp.array(v) for k, v in losses.items()}
+
+
+
 
 
 def train_pinn(sensor_data: jnp.ndarray, cfg: Config) -> tuple[dict, dict]:
