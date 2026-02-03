@@ -72,6 +72,10 @@ def main():
     plt.plot(losses['total'], label='Total')
     plt.plot(losses['data'], label='Data')
     plt.plot(losses['ic'], label='IC')
+
+    plt.xlabel('Epoke')
+    plt.ylabel('Tap')
+
     plt.legend()
     plt.savefig('output/nn/nn_losses.png')
 
