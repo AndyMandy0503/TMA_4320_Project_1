@@ -90,10 +90,27 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
     #######################################################################
     # Oppgave 5.2: Start
     #######################################################################
+    alpha = jnp.exp(pinn_params['log_alpha'])
+    P = jnp.exp(pinn_params['log_power'])
+    q = jnp.where(cfg.is_source(x, y), P, 0.0)
 
-    # Placeholder initialization — replace this with your implementation
-    physics_loss_val = None
+    def T_fn(x_, y_, t_):
+            return forward(pinn_params["nn"], x_, y_, t_, cfg)
+    
+    def _pde_residual_scalar(pinn_params, xi, yi, ti, cfg):
+        f_t = grad(T_fn, 2)(xi, yi, ti)  
+        f_xx = grad(grad(T_fn, 0), 0)(xi, yi, ti)  
+        f_yy = grad(grad(T_fn, 1), 1)(xi, yi, ti) 
 
+        residual = f_t - alpha * (f_xx + f_yy) - q
+        return residual
+    
+    residuals = vmap(
+        lambda xi, yi, ti: _pde_residual_scalar(pinn_params, xi, yi, ti, cfg)
+        )(x, y, t)
+
+    physics_loss_val = jnp.array(jnp.mean(residuals**2))
+    
     #######################################################################
     # Oppgave 5.2: Slutt
     #######################################################################
