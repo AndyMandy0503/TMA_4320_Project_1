@@ -24,6 +24,7 @@ def main():
 
     sensor_data = generate_training_data(cfg=cfg)
     pinn_params, losses = train_pinn(sensor_data[4], cfg)
+
     x = sensor_data[0]
     y = sensor_data[1]
     t = sensor_data[2]
@@ -47,6 +48,11 @@ def main():
 
     plt.legend()
     plt.savefig('output/pinn/pinn_losses.png')
+
+    for key in pinn_params.keys():
+        if key == 'nn':
+            continue
+        print(f'{key[4:]}: {jnp.exp(pinn_params[key][0])}\n')
 
     #######################################################################
     # Oppgave 5.4: Slutt
