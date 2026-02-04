@@ -83,46 +83,27 @@ def train_pinn(sensor_data: jnp.ndarray, cfg: Config) -> tuple[dict, dict]:
     # Oppgave 5.3: Start
     #######################################################################
 
-    ic_array = sensor_data[:, :3].at[:, 2].set(cfg.T_outside)
-    x, y, t = sensor_data[:, 0], sensor_data[:, 1], sensor_data[:, 2]
-    ph_array = []
-    bc_array = []
-    #splits into boundary and interior points
-    for i in range(len(x)):
-        if x[i] == cfg.x_min:
-            bc_array.append(jnp.array([x[i], y[i], t[i], 0, -1]))
-
-        elif x[i] == cfg.x_max:
-            bc_array.append(jnp.array([x[i], y[i], t[i], 0, 1]))
-        
-        elif y[i] == cfg.y_min:
-            bc_array.append(jnp.array([x[i], y[i], t[i], -1, 0]))
-            
-        elif y[i] == cfg.y_max:
-            bc_array.append(jnp.array([x[i], y[i], t[i], 1, 0]))
-
-        else:
-            ph_array.append(jnp.array([x[i], y[i], t[i]]))
-    
-    ph_array = jnp.array(ph_array)
-    bc_array = jnp.array(bc_array)
-
-    def objective_fn(pinn_params):
-        ret_val = cfg.lambda_data * ic_loss(nn_params=pinn_params['nn'], ic_points=ic_array, cfg=cfg)
-        ret_val += cfg.lambda_ic * data_loss(nn_params=pinn_params['nn'], sensor_data=sensor_data, cfg=cfg)
-        ret_val += cfg.lambda_physics * physics_loss(pinn_params=pinn_params, interior_points=sensor_data, cfg=cfg)
-        ret_val += cfg.lambda_bc * bc_loss(pinn_params=pinn_params, bc_points=ic_array, cfg=cfg)
-        return ret_val
-    
-
     from tqdm import tqdm
     for i in tqdm(range(cfg.num_epochs), desc="Training PINN"):
-        obj_val, obj_grad = jax.value_and_grad(objective_fn)(pinn_params)
-        loss_ic = ic_loss(nn_params=pinn_params['nn'], ic_points=ic_array, cfg=cfg)
-        loss_data = data_loss(nn_params=pinn_params['nn'], sensor_data=sensor_data, cfg=cfg)
-        loss_physics = physics_loss(pinn_params=pinn_params, interior_points=sensor_data, cfg=cfg)
-        loss_bc = bc_loss(pinn_params=pinn_params, bc_points=ic_array, cfg=cfg)
         
+        interior_epoch, key = sample_interior(key, cfg) 
+        ic_epoch, key = sample_ic(key, cfg)
+        bc_epoch, key = sample_bc(key, cfg)
+
+        loss_ic = ic_loss(nn_params=pinn_params['nn'], ic_points=ic_epoch, cfg=cfg)
+        loss_physics = physics_loss(pinn_params=pinn_params, interior_points=interior_epoch, cfg=cfg)
+        loss_bc = bc_loss(pinn_params=pinn_params, bc_points=bc_epoch, cfg=cfg)
+        loss_data = data_loss(nn_params=pinn_params['nn'], sensor_data=sensor_data, cfg=cfg)
+
+        def objective_fn(pinn_params):
+            ret_val = cfg.lambda_data * ic_loss(nn_params=pinn_params['nn'], ic_points=ic_epoch, cfg=cfg)
+            ret_val += cfg.lambda_ic * data_loss(nn_params=pinn_params['nn'], sensor_data=sensor_data, cfg=cfg)
+            ret_val += cfg.lambda_physics * physics_loss(pinn_params=pinn_params, interior_points=interior_epoch, cfg=cfg)
+            ret_val += cfg.lambda_bc * bc_loss(pinn_params=pinn_params, bc_points=bc_epoch, cfg=cfg)
+            return ret_val
+        
+        obj_val, obj_grad = jax.value_and_grad(objective_fn)(pinn_params)
+    
         losses["ic"].append(loss_ic)
         losses["data"].append(loss_data)
         losses["physics"].append(loss_physics)
